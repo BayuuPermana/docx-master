@@ -10,13 +10,16 @@ import { readDocTool } from "./tools/readDoc.js";
 import { createDocTool } from "./tools/createDoc.js";
 import { inspectDocTool } from "./tools/inspectDoc.js";
 import { cleanupMediaTool } from "./tools/cleanupMedia.js";
+import { surgicalReplaceTool } from "./tools/surgicalReplace.js";
+import { surgicalAddImageTool } from "./tools/surgicalAddImage.js";
+import { surgicalInsertTool } from "./tools/surgicalInsert.js";
 
-const TOOLS = [readDocTool, createDocTool, inspectDocTool, cleanupMediaTool];
+const TOOLS = [readDocTool, createDocTool, inspectDocTool, cleanupMediaTool, surgicalReplaceTool, surgicalAddImageTool, surgicalInsertTool];
 
 const server = new Server(
   {
     name: "word-master-mcp",
-    version: "1.1.0",
+    version: "2.2.0",
   },
   {
     capabilities: {
@@ -55,7 +58,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Word Master MCP Server running on stdio");
+  console.error("Word Master MCP Server v2.2.0 (Surgical Suite) running on stdio");
 }
 
 main().catch((error) => {

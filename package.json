@@ -18,6 +18,8 @@
     "docxml": "^5.15.1",
     "fast-xml-parser": "^5.3.3",
     "mammoth": "^1.11.0",
+    "xmldom": "^0.6.0",
+    "xpath": "^0.0.34",
     "zod": "^4.3.5",
     "zod-to-json-schema": "^3.25.1"
   }

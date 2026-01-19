@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, ImageRun, WidthType, PageOrientation, Header, Footer } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, ImageRun, WidthType, PageOrientation, Header, Footer, BorderStyle } from "docx";
 import * as fs from "fs";
 
 const HeadingLevelMap: Record<string, any> = {
@@ -9,64 +9,109 @@ const HeadingLevelMap: Record<string, any> = {
 };
 
 const AlignmentMap: Record<string, any> = {
-    left: AlignmentType.LEFT, center: AlignmentType.CENTER, right: AlignmentType.RIGHT, justified: AlignmentType.JUSTIFIED,
+    left: AlignmentType.LEFT, center: AlignmentType.CENTER, right: AlignmentType.RIGHT, 
+    justified: AlignmentType.JUSTIFIED, justify: AlignmentType.JUSTIFIED,
+    both: AlignmentType.JUSTIFIED
 };
-
-const TextRunSchema = z.object({
-    text: z.string().default(""), bold: z.boolean().optional(), italic: z.boolean().optional(),
-    underline: z.boolean().optional(), size: z.number().optional(), color: z.string().optional(), font: z.string().optional(),
-});
-
-const ImageSchema = z.object({ type: z.literal("image"), path: z.string(), width: z.number(), height: z.number() });
-
-const ParagraphSchema = z.object({
-    type: z.literal("paragraph"), text: z.string().optional(),
-    children: z.array(z.union([TextRunSchema, ImageSchema])).optional(),
-    heading: z.enum(["Heading1", "Heading2", "Heading3", "Heading4", "Heading5", "Heading6", "Title", "Subtitle"]).optional(),
-    alignment: z.enum(["left", "center", "right", "justified"]).optional(),
-    spacing: z.object({ before: z.number().optional(), after: z.number().optional(), line: z.number().optional() }).optional(),
-});
-
-const BlockSchema = z.union([ParagraphSchema, z.any()]); // Simplify for brevity
-
-const SectionSchema = z.object({
-    headers: z.array(z.object({ content: z.array(ParagraphSchema) })).optional(),
-    footers: z.array(z.object({ content: z.array(ParagraphSchema) })).optional(),
-    properties: z.object({
-        margins: z.object({ top: z.number().optional(), bottom: z.number().optional(), left: z.number().optional(), right: z.number().optional() }).optional(),
-        orientation: z.enum(["portrait", "landscape"]).optional(),
-    }).optional(),
-    children: z.array(BlockSchema),
-});
 
 export const createDocTool = {
     name: "create_styled_doc",
-    description: "Creates a .docx file with full support for headers, footers, and styles.",
-    inputSchema: z.object({ path: z.string(), sections: z.array(SectionSchema) }),
-    handler: async (args: { path: string, sections: any[] }) => {
+    description: "Creates a .docx file with ultra-high fidelity images, headers, and footers.",
+    inputSchema: z.object({
+        path: z.string(),
+        sections: z.array(z.any()),
+        headers: z.array(z.any()).optional(),
+        footers: z.array(z.any()).optional(),
+    }),
+    handler: async (args: { path: string, sections: any[], headers?: any[], footers?: any[] }) => {
         try {
-            const docSections = args.sections.map(sec => {
-                const parseBlocks = (blocks: any[]) => blocks.map(block => {
-                    const runChildren: any[] = [];
-                    if (block.text) runChildren.push(new TextRun({ text: block.text }));
-                    if (block.children) {
-                        block.children.forEach((c: any) => {
-                            if (c.type === "image") {
-                                if (fs.existsSync(c.path)) runChildren.push(new ImageRun({ data: fs.readFileSync(c.path), transformation: { width: c.width, height: c.height } }));
-                            } else {
-                                runChildren.push(new TextRun({ text: String(c.text || ""), bold: c.bold, italics: c.italic, underline: c.underline ? { type: "single" } : undefined, size: c.size ? c.size * 2 : undefined, color: c.color, font: c.font }));
-                            }
-                        });
+            const parseParagraph = (p: any) => {
+                const children: any[] = [];
+                (p.children || []).forEach((c: any) => {
+                    if (c.type === "text_run") {
+                        children.push(new TextRun({
+                            text: String(c.text || ""),
+                            bold: !!c.bold,
+                            italics: !!c.italic,
+                            underline: c.underline ? { type: "single" } : undefined,
+                            size: (typeof c.size === 'number') ? Math.round(c.size * 2) : undefined,
+                            color: (typeof c.color === 'string' && c.color.length === 6) ? c.color : undefined,
+                            font: c.font
+                        }));
+                    } else if (c.type === "image") {
+                        if (fs.existsSync(c.path)) {
+                            children.push(new ImageRun({
+                                data: fs.readFileSync(c.path),
+                                transformation: { width: c.width || 100, height: c.height || 100 }
+                            }));
+                        }
                     }
-                    if (runChildren.length === 0) runChildren.push(new TextRun(""));
-                    return new Paragraph({ children: runChildren, heading: block.heading ? HeadingLevelMap[block.heading] : undefined, alignment: block.alignment ? AlignmentMap[block.alignment] : undefined, spacing: block.spacing });
                 });
 
-                const sectionProps: any = { children: parseBlocks(sec.children) };
-                if (sec.headers) sectionProps.headers = { default: new Header({ children: parseBlocks(sec.headers[0].content) }) };
-                if (sec.footers) sectionProps.footers = { default: new Footer({ children: parseBlocks(sec.footers[0].content) }) };
-                if (sec.properties) sectionProps.properties = { page: { margin: sec.properties.margins, orientation: sec.properties.orientation === "landscape" ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT } };
-                
+                if (children.length === 0) children.push(new TextRun(""));
+
+                return new Paragraph({
+                    children: children,
+                    heading: HeadingLevelMap[p.style] || undefined,
+                    alignment: (AlignmentMap as any)[p.alignment] || undefined,
+                    spacing: p.spacing ? {
+                        before: p.spacing.before,
+                        after: p.spacing.after,
+                        line: p.spacing.line
+                    } : undefined,
+                    indent: p.indent ? {
+                        left: p.indent.left,
+                        hanging: p.indent.hanging,
+                        firstLine: p.indent.firstLine
+                    } : undefined
+                });
+            };
+
+            const parseBlocks = (blocks: any[]) => blocks.map(block => {
+                if (block.type === "paragraph") return parseParagraph(block);
+                if (block.type === "table") {
+                    return new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        borders: {
+                            top: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                            bottom: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                            left: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                            right: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                            insideHorizontal: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                            insideVertical: { style: BorderStyle.SINGLE, size: 4, color: "000000" },
+                        },
+                        rows: (block.rows || []).map((row: any) => new TableRow({
+                            children: (row.cells || []).map((cell: any) => new TableCell({
+                                children: (cell.content || []).map((b: any) => {
+                                    if (b.type === "paragraph") return parseParagraph(b);
+                                    if (b.type === "table") return new Table({ rows: [] }); // Recursive nesting too deep for now
+                                    return new Paragraph("");
+                                })
+                            }))
+                        }))
+                    });
+                }
+                return new Paragraph("");
+            });
+
+            const docSections = args.sections.map(sec => {
+                const sectionProps: any = {
+                    children: parseBlocks(sec.children),
+                    properties: {
+                        page: {
+                            margin: sec.properties?.margins,
+                            orientation: sec.properties?.orientation === "landscape" ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT
+                        }
+                    }
+                };
+
+                if (args.headers?.length) {
+                    sectionProps.headers = { default: new Header({ children: parseBlocks(args.headers[0].content) }) };
+                }
+                if (args.footers?.length) {
+                    sectionProps.footers = { default: new Footer({ children: parseBlocks(args.footers[0].content) }) };
+                }
+
                 return sectionProps;
             });
 
@@ -75,7 +120,7 @@ export const createDocTool = {
             fs.writeFileSync(args.path, buffer);
             return { content: [{ type: "text", text: `Success: ${args.path}` }], isError: false };
         } catch (error: any) {
-            return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+            return { content: [{ type: "text", text: `Fatal Error: ${error.message}` }], isError: true };
         }
     }
 };
