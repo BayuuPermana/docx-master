@@ -18,7 +18,7 @@ const TOOLS = [readDocTool, createDocTool, inspectDocTool, cleanupMediaTool, sur
 
 const server = new Server(
   {
-    name: "word-master-mcp",
+    name: "docx-master",
     version: "2.2.0",
   },
   {

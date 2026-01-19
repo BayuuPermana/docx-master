@@ -1,4 +1,4 @@
-# Word Master MCP Server (v1.1.0)
+# Docx Master (v2.2.0)
 
 A high-fidelity Model Context Protocol (MCP) server for local Microsoft Word (.docx) manipulation.
 
@@ -42,7 +42,7 @@ Deletes the `mcp_media` folder.
 ## Usage (Claude/Gemini)
 
 ```json
-"word-master": {
+"docx-master": {
   "command": "bun",
   "args": ["run", "D:/porto/MCP/src/index.ts"]
 }

@@ -1,5 +1,5 @@
 {
-  "name": "word-master-mcp",
+  "name": "docx-master",
   "module": "src/index.ts",
   "type": "module",
   "private": true,
