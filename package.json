@@ -1,0 +1,24 @@
+{
+  "name": "word-master-mcp",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^25.0.9",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "adm-zip": "^0.5.16",
+    "docx": "^9.5.1",
+    "docxml": "^5.15.1",
+    "fast-xml-parser": "^5.3.3",
+    "mammoth": "^1.11.0",
+    "zod": "^4.3.5",
+    "zod-to-json-schema": "^3.25.1"
+  }
+}
