@@ -1,4 +1,4 @@
-# Docx Master (v2.2.0)
+# Docx Master (v1.0.0)
 
 A high-fidelity Model Context Protocol (MCP) server for local Microsoft Word (.docx) manipulation. This server uses a "Surgical Editing" workflow to modify existing documents without losing metadata or corrupting the internal XML structure.
 
