@@ -67,7 +67,7 @@ export const createDocTool = {
                 });
             };
 
-            const parseBlocks = (blocks: any[]) => blocks.map(block => {
+            const parseBlocks = (blocks: any[]) => (blocks || []).map(block => {
                 if (block.type === "paragraph") return parseParagraph(block);
                 if (block.type === "table") {
                     return new Table({
@@ -96,7 +96,7 @@ export const createDocTool = {
 
             const docSections = args.sections.map(sec => {
                 const sectionProps: any = {
-                    children: parseBlocks(sec.children),
+                    children: parseBlocks(sec.children || []),
                     properties: {
                         page: {
                             margin: sec.properties?.margins,
@@ -105,10 +105,10 @@ export const createDocTool = {
                     }
                 };
 
-                if (args.headers?.length) {
+                if (args.headers?.[0]?.content) {
                     sectionProps.headers = { default: new Header({ children: parseBlocks(args.headers[0].content) }) };
                 }
-                if (args.footers?.length) {
+                if (args.footers?.[0]?.content) {
                     sectionProps.footers = { default: new Footer({ children: parseBlocks(args.footers[0].content) }) };
                 }
 

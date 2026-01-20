@@ -30,11 +30,15 @@ const server = new Server(
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
-    tools: TOOLS.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.inputSchema) as any,
-    })),
+    tools: TOOLS.map((tool) => {
+      const jsonSchema = zodToJsonSchema(tool.inputSchema) as any;
+      const { $schema, ...cleanSchema } = jsonSchema;
+      return {
+        name: tool.name,
+        description: tool.description,
+        inputSchema: cleanSchema,
+      };
+    }),
   };
 });
 
@@ -58,7 +62,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Word Master MCP Server v2.2.0 (Surgical Suite) running on stdio");
+  
+  // Keep the process alive
+  setInterval(() => {}, 1000);
 }
 
 main().catch((error) => {

@@ -1,0 +1,24 @@
+name = "docx-create"
+description = "Creates a styled .docx file from JSON-defined sections."
+usage = "/docx-create --path=<path> --sections=<json_array>"
+script = "create.sh"
+
+[[parameters]]
+name = "path"
+description = "The absolute path to save the .docx file."
+required = true
+
+[[parameters]]
+name = "sections"
+description = "A JSON array of section objects."
+required = true
+
+[[parameters]]
+name = "headers"
+description = "A JSON array of header objects."
+required = false
+
+[[parameters]]
+name = "footers"
+description = "A JSON array of footer objects."
+required = false

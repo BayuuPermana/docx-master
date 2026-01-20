@@ -1,0 +1,24 @@
+name = "docx-replace"
+description = "Replaces text patterns across a .docx file while preserving formatting."
+usage = "/docx-replace --inputPath=<in> --outputPath=<out> --search=<pattern> --replace=<new_text>"
+script = "replace.sh"
+
+[[parameters]]
+name = "inputPath"
+description = "Path to the input .docx file."
+required = true
+
+[[parameters]]
+name = "outputPath"
+description = "Path to save the modified .docx file."
+required = true
+
+[[parameters]]
+name = "search"
+description = "The text pattern to search for."
+required = true
+
+[[parameters]]
+name = "replace"
+description = "The replacement text."
+required = true

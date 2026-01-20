@@ -1,0 +1,10 @@
+{
+  "name": "docx-master",
+  "version": "1.0.0",
+  "description": "Surgical Suite for Microsoft Word Documents",
+  "author": "Pickle Rick",
+  "context": "GEMINI.md",
+  "commands_dir": "commands",
+  "scripts_dir": "scripts",
+  "skills_dir": "skills"
+}

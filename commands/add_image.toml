@@ -1,0 +1,34 @@
+name = "docx-add-image"
+description = "Injects an image into a .docx file at a specific paragraph index."
+usage = "/docx-add-image --inputPath=<in> --outputPath=<out> --imagePath=<img_path> --targetParagraphIndex=<index>"
+script = "add_image.sh"
+
+[[parameters]]
+name = "inputPath"
+description = "Path to the input .docx file."
+required = true
+
+[[parameters]]
+name = "outputPath"
+description = "Path to save the modified .docx file."
+required = true
+
+[[parameters]]
+name = "imagePath"
+description = "Path to the image to inject."
+required = true
+
+[[parameters]]
+name = "targetParagraphIndex"
+description = "Index of the paragraph where the image will be injected."
+required = true
+
+[[parameters]]
+name = "width"
+description = "Width in pixels (default: 100)."
+required = false
+
+[[parameters]]
+name = "height"
+description = "Height in pixels (default: 100)."
+required = false

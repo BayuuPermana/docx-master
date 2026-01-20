@@ -1,0 +1,9 @@
+name = "docx-read"
+description = "Reads a Word document and returns markdown content."
+usage = "/docx-read <path>"
+script = "read.sh"
+
+[[parameters]]
+name = "path"
+description = "The absolute path to the .docx file."
+required = true

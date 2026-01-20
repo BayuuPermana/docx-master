@@ -1,0 +1,9 @@
+name = "docx-cleanup"
+description = "Deletes the temporary mcp_media folder."
+usage = "/docx-cleanup --directory=<dir>"
+script = "cleanup.sh"
+
+[[parameters]]
+name = "directory"
+description = "The directory containing the mcp_media folder."
+required = true

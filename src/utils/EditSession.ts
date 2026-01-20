@@ -23,6 +23,10 @@ export class EditSession {
         return dom;
     }
 
+    public getPartNames(): string[] {
+        return this.zip.getEntries().map(entry => entry.entryName);
+    }
+
     public setPart(partPath: string, dom: Document) {
         this.parts[partPath] = dom;
     }

@@ -1,0 +1,29 @@
+name = "docx-insert"
+description = "Inserts a new paragraph inheriting styles from a template."
+usage = "/docx-insert --inputPath=<in> --outputPath=<out> --templateParagraphIndex=<index> --text=<text>"
+script = "insert.sh"
+
+[[parameters]]
+name = "inputPath"
+description = "Path to the input .docx file."
+required = true
+
+[[parameters]]
+name = "outputPath"
+description = "Path to save the modified .docx file."
+required = true
+
+[[parameters]]
+name = "templateParagraphIndex"
+description = "Index of the paragraph to clone styles from."
+required = true
+
+[[parameters]]
+name = "text"
+description = "Text content for the new paragraph."
+required = true
+
+[[parameters]]
+name = "insertAfter"
+description = "If true, inserts after the template (default: true)."
+required = false

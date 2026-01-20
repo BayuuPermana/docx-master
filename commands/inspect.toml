@@ -1,0 +1,9 @@
+name = "docx-inspect"
+description = "Inspects the internal XML structure of a Word document for cloning."
+usage = "/docx-inspect <path>"
+script = "inspect.sh"
+
+[[parameters]]
+name = "path"
+description = "The absolute path to the .docx file."
+required = true
