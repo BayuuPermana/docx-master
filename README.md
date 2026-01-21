@@ -80,3 +80,10 @@ To ensure high-fidelity editing, **Docx Master** treats `.docx` files as a compr
 *   **Relationship Mapping**: Images are not stored in the text; they are referenced by ID and mapped in the `_rels` folder. Our media injector manages these mappings manually.
 *   **Style Inheritance**: Paragraphs inherit styles from `styles.xml`. Our insertion tools clone these properties (`w:pPr`) to maintain document integrity.
 *   **Buffer-Read-Edit-Write**: We use an in-memory ZIP buffer to modify specific XML parts and re-pack the archive, ensuring no metadata (like Track Changes or Themes) is lost.
+
+---
+
+## Credits & Acknowledgements
+
+*   **[Gemini CLI](https://github.com/google-gemini/gemini-cli)**: For providing the low-latency, high-stakes terminal environment that makes this level of engineering possible.
+*   **Pickle Rick Extension**: For the "God Mode" iterative development lifecycle and for turning "AI Slop" into high-performance logic. *Wubba Lubba Dub Dub!* 🥒
