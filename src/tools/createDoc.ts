@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, ImageRun, WidthType, PageOrientation, Header, Footer, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, ImageRun, WidthType, PageOrientation, Header, Footer, BorderStyle, PageNumber, IStylesOptions } from "docx";
 import * as fs from "fs";
 
 const HeadingLevelMap: Record<string, any> = {
@@ -22,8 +22,9 @@ export const createDocTool = {
         sections: z.array(z.any()),
         headers: z.array(z.any()).optional(),
         footers: z.array(z.any()).optional(),
+        externalStyles: z.string().optional()
     }),
-    handler: async (args: { path: string, sections: any[], headers?: any[], footers?: any[] }) => {
+    handler: async (args: { path: string, sections: any[], headers?: any[], footers?: any[], externalStyles?: string }) => {
         try {
             const parseParagraph = (p: any) => {
                 const children: any[] = [];
@@ -35,7 +36,7 @@ export const createDocTool = {
                             italics: !!c.italic,
                             underline: c.underline ? { type: "single" } : undefined,
                             size: (typeof c.size === 'number') ? Math.round(c.size * 2) : undefined,
-                            color: (typeof c.color === 'string' && c.color.length === 6) ? c.color : undefined,
+                            color: (typeof c.color === 'string' && (c.color.length === 6 || c.color.length === 8)) ? c.color : undefined,
                             font: c.font
                         }));
                     } else if (c.type === "image") {
@@ -45,26 +46,34 @@ export const createDocTool = {
                                 transformation: { width: c.width || 100, height: c.height || 100 }
                             }));
                         }
+                    } else if (c.type === "page_number") {
+                        children.push(PageNumber.CURRENT);
                     }
                 });
 
                 if (children.length === 0) children.push(new TextRun(""));
 
-                return new Paragraph({
-                    children: children,
-                    heading: HeadingLevelMap[p.style] || undefined,
-                    alignment: (AlignmentMap as any)[p.alignment] || undefined,
-                    spacing: p.spacing ? {
-                        before: p.spacing.before,
-                        after: p.spacing.after,
-                        line: p.spacing.line
-                    } : undefined,
-                    indent: p.indent ? {
-                        left: p.indent.left,
-                        hanging: p.indent.hanging,
-                        firstLine: p.indent.firstLine
-                    } : undefined
-                });
+                const pProps: any = { children };
+                if (p.style) pProps.style = p.style; 
+                if (AlignmentMap[p.alignment]) pProps.alignment = AlignmentMap[p.alignment];
+                
+                if (p.spacing) {
+                    pProps.spacing = {};
+                    if (typeof p.spacing.before === 'number') pProps.spacing.before = p.spacing.before;
+                    if (typeof p.spacing.after === 'number') pProps.spacing.after = p.spacing.after;
+                    if (typeof p.spacing.line === 'number') pProps.spacing.line = p.spacing.line;
+                    if (p.spacing.lineRule) pProps.spacing.lineRule = p.spacing.lineRule;
+                }
+
+                if (p.indent) {
+                    pProps.indent = {};
+                    if (typeof p.indent.left === 'number') pProps.indent.left = p.indent.left;
+                    if (typeof p.indent.right === 'number') pProps.indent.right = p.indent.right;
+                    if (typeof p.indent.hanging === 'number') pProps.indent.hanging = p.indent.hanging;
+                    if (typeof p.indent.firstLine === 'number') pProps.indent.firstLine = p.indent.firstLine;
+                }
+
+                return new Paragraph(pProps);
             };
 
             const parseBlocks = (blocks: any[]) => (blocks || []).map(block => {
@@ -84,7 +93,7 @@ export const createDocTool = {
                             children: (row.cells || []).map((cell: any) => new TableCell({
                                 children: (cell.content || []).map((b: any) => {
                                     if (b.type === "paragraph") return parseParagraph(b);
-                                    if (b.type === "table") return new Table({ rows: [] }); // Recursive nesting too deep for now
+                                    if (b.type === "table") return new Table({ rows: [] }); 
                                     return new Paragraph("");
                                 })
                             }))
@@ -105,17 +114,25 @@ export const createDocTool = {
                     }
                 };
 
-                if (args.headers?.[0]?.content) {
+                if (args.headers?.length > 0) {
                     sectionProps.headers = { default: new Header({ children: parseBlocks(args.headers[0].content) }) };
                 }
-                if (args.footers?.[0]?.content) {
-                    sectionProps.footers = { default: new Footer({ children: parseBlocks(args.footers[0].content) }) };
+                if (args.footers?.length > 0) {
+                    const pageFooter = args.footers.find((f:any) => f.content.some((p:any) => p.children.some((c:any) => c.type === "page_number")));
+                    const footerToUse = pageFooter || args.footers[0];
+                    sectionProps.footers = { default: new Footer({ children: parseBlocks(footerToUse.content) }) };
                 }
 
                 return sectionProps;
             });
 
-            const doc = new Document({ sections: docSections });
+            const docConfig: any = { sections: docSections };
+            if (args.externalStyles) {
+                // docx library supports importing external styles XML
+                docConfig.externalStyles = args.externalStyles;
+            }
+
+            const doc = new Document(docConfig);
             const buffer = await Packer.toBuffer(doc);
             fs.writeFileSync(args.path, buffer);
             return { content: [{ type: "text", text: `Success: ${args.path}` }], isError: false };
